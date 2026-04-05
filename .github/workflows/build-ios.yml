@@ -28,6 +28,11 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync
       
+    - name: Install CocoaPods
+      run: |
+        cd ios/App
+        pod install --repo-update
+      
     - name: Build iOS Project
       run: |
         cd ios/App
@@ -37,7 +42,11 @@ jobs:
       run: |
         cd ios/App
         mkdir -p Payload
-        cp -r build/Release-iphoneos/App.app Payload/
+        if [ -d "build/Release-iphoneos/App.app" ]; then
+          cp -r build/Release-iphoneos/App.app Payload/
+        elif [ -d "build/Release-iphoneos/Eagle Phone POS.app" ]; then
+          cp -r "build/Release-iphoneos/Eagle Phone POS.app" Payload/App.app
+        fi
         zip -r ../../EaglePhonePOS.ipa Payload
         rm -rf Payload
       
