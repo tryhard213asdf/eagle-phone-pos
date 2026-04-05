@@ -32,6 +32,16 @@ jobs:
     - name: Sync Capacitor
       run: npx cap sync
       
+    - name: Check iOS setup
+      run: |
+        ls -la ios/App/
+        if [ ! -f "ios/App/Podfile" ]; then
+          echo "Podfile not found, removing ios folder and re-adding..."
+          rm -rf ios
+          npx cap add ios
+          npx cap sync
+        fi
+      
     - name: Install CocoaPods
       run: |
         cd ios/App
