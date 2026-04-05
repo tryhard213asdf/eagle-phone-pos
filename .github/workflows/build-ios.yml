@@ -31,12 +31,13 @@ jobs:
     - name: Install CocoaPods
       run: |
         cd ios/App
-        pod install --repo-update
+        pod install --verbose
       
     - name: Build iOS Project
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO
+        xcodebuild -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO -allowProvisioningUpdates 2>&1 | tee build.log
+        cat build.log
       
     - name: Export IPA (unsigned)
       run: |
