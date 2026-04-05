@@ -1,0 +1,49 @@
+name: Build iOS IPA
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Install Capacitor iOS
+      run: npm install @capacitor/ios
+      
+    - name: Sync Capacitor
+      run: npx cap sync
+      
+    - name: Build iOS Project
+      run: |
+        cd ios/App
+        xcodebuild -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO
+      
+    - name: Export IPA (unsigned)
+      run: |
+        cd ios/App
+        mkdir -p Payload
+        cp -r build/Release-iphoneos/App.app Payload/
+        zip -r ../../EaglePhonePOS.ipa Payload
+        rm -rf Payload
+      
+    - name: Upload IPA artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: EaglePhonePOS-IPA
+        path: EaglePhonePOS.ipa
+        retention-days: 30

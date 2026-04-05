@@ -1,0 +1,26 @@
+{
+  "name": "web-eagle-phne",
+  "version": "1.0.0",
+  "description": "Eagle Phone POS Desktop Application",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "electron-packager . WebEaglePhone --platform=win32 --arch=x64 --out=dist --overwrite",
+    "build-installer": "node build-installer.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Eagle Phone",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "@electron/packager": "^19.1.0",
+    "electron": "^41.1.1",
+    "electron-winstaller": "^5.4.0"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.3.0",
+    "@capacitor/core": "^8.3.0",
+    "@capacitor/ios": "^8.3.0"
+  }
+}

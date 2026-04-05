@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eagle Phone POS</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+<script>
+tailwind.config={theme:{extend:{colors:{eagle:{50:'#FEF3E2',100:'#FDE4B8',200:'#FACA7A',300:'#F0A83D',400:'#D4620A',500:'#B85208',600:'#8B3E06'},dark:{DEFAULT:'#1D1D1F',light:'#2C2C2E',lighter:'#3A3A3C',muted:'#6E6E73'},surface:{DEFAULT:'#F5F5F7',card:'#FFFFFF',muted:'#86868B',border:'#E5E5EA'},ok:'#2DA44E',no:'#CF222E',warn:'#BF8700',info:'#0969DA'},fontFamily:{sans:['Plus Jakarta Sans','sans-serif']}}}}
+</script>
+<style>
+*{font-family:'Plus Jakarta Sans',sans-serif;box-sizing:border-box}
+body{background:#F5F5F7;overflow:hidden;margin:0}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#C7C7CC;border-radius:3px}
+.login-bg{background:linear-gradient(160deg,#0f172a,#1e293b 40%,#1a1a2e);position:relative;overflow:hidden}
+.login-bg::before{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(212,98,10,.12) 0%,transparent 70%);top:-100px;right:-100px;border-radius:50%}
+.login-card{backdrop-filter:blur(20px);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1)}
+.login-input{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#fff;transition:all .2s}
+.login-input:focus{background:rgba(255,255,255,.1);border-color:#D4620A;outline:none;box-shadow:0 0 0 3px rgba(212,98,10,.15)}
+.login-input::placeholder{color:rgba(255,255,255,.35)}
+.login-btn{background:linear-gradient(135deg,#D4620A,#B85208);transition:all .25s;box-shadow:0 4px 20px rgba(212,98,10,.3)}
+.login-btn:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(212,98,10,.4)}
+.login-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.login-error{animation:shake .4s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+.login-fade-out{animation:fadeOut .5s ease forwards}
+@keyframes fadeOut{to{opacity:0;transform:scale(1.02)}}
+.logo-circ{border-radius:50%;object-fit:contain;background:#fff}
+.nav-item{transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;cursor:pointer}
+.nav-item::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:3px;height:0;background:#D4620A;border-radius:0 3px 3px 0;transition:height .25s}
+.nav-item.active::before{height:26px}
+.nav-item.active{background:rgba(212,98,10,.12);color:#D4620A}
+.nav-item:hover:not(.active){background:rgba(255,255,255,.06)}
+.view{display:none;opacity:0;transform:translateY(6px)}
+.view.active{display:block;animation:vIn .3s ease forwards}
+@keyframes vIn{to{opacity:1;transform:translateY(0)}}
+.card-h{transition:all .3s cubic-bezier(.4,0,.2,1)}.card-h:hover{transform:translateY(-3px);box-shadow:0 12px 36px rgba(0,0,0,.07)}
+.quick-btn{transition:all .25s}.quick-btn:hover{transform:translateY(-2px)}.quick-btn:active{transform:scale(.98)}
+.prod-card{transition:all .2s;cursor:pointer}.prod-card:hover{border-color:#D4620A;box-shadow:0 4px 16px rgba(212,98,10,.1)}
+.prod-card:hover .pimg{transform:scale(1.04)}.pimg{transition:transform .3s}
+.cart-item{animation:slIn .2s ease}@keyframes slIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:translateX(0)}}
+.pulse-d{animation:pls 2s infinite}@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.6)}}
+.toast{transform:translateX(120%);transition:transform .35s}.toast.show{transform:translateX(0)}
+.mo{opacity:0;pointer-events:none;transition:opacity .25s}.mo.on{opacity:1;pointer-events:all}
+.mo .mc{transform:scale(.96) translateY(8px);transition:transform .25s}.mo.on .mc{transform:scale(1) translateY(0)}
+.badge{font-size:10px;padding:2px 8px;border-radius:99px;font-weight:600}
+.b-no{background:#FFEEF0;color:#CF222E}.b-wr{background:#FFF8E0;color:#9A6700}.b-ok{background:#E6F9EC;color:#1A7F37}
+.trow{transition:background .15s}.trow:hover{background:#FAFAFA}
+.ifb{display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#f0f0f0,#e8e8e8);color:#aaa;font-size:24px}
+.ifb-s{font-size:14px;color:#bbb}
+.pm-btn{transition:all .15s}.pm-btn.sel{background:#FEF3E2;border-color:#D4620A}.pm-btn:not(.sel):hover{border-color:#ccc}
+.rbtn{transition:all .2s}.rbtn:hover{background:#FFEEF0;color:#CF222E;border-color:#CF222E}
+.dbtn{transition:all .15s}.dbtn:hover{background:#FFEEF0;color:#CF222E}
+.empt{text-align:center;padding:48px 20px;color:#86868B}.empt i{font-size:32px;opacity:.2;margin-bottom:12px;display:block}.empt p{font-size:14px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body class="h-screen">
+
+<!-- LOGIN -->
+<div id="loginScreen" class="login-bg fixed inset-0 z-[100] flex items-center justify-center">
+  <div class="login-card rounded-3xl p-10 w-[420px] relative z-10">
+    <div class="text-center mb-8">
+      <img id="loginLogo" src="" alt="Eagle Phone" class="logo-circ w-32 h-32 mx-auto mb-5" />
+      <h1 class="text-white text-2xl font-extrabold tracking-tight">Eagle Phone POS</h1>
+      <p class="text-gray-400 text-sm mt-1">Sign in to your store account</p>
+    </div>
+    <div id="loginErr" class="hidden mb-4 bg-red-500/10 border border-red-500/20 rounded-xl px-4 py-3 text-red-400 text-sm text-center login-error">
+      <i class="fa-solid fa-circle-xmark mr-1"></i><span id="loginErrTxt"></span>
+    </div>
+    <div class="space-y-4">
+      <div>
+        <label class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Email Address</label>
+        <div class="relative"><i class="fa-solid fa-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i><input id="loginEmail" type="email" class="login-input w-full pl-10 pr-4 py-3 rounded-xl text-sm" placeholder="Enter your email" /></div>
+      </div>
+      <div>
+        <label class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-1.5 block">Password</label>
+        <div class="relative"><i class="fa-solid fa-lock absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500 text-sm"></i><input id="loginPass" type="password" class="login-input w-full pl-10 pr-11 py-3 rounded-xl text-sm" placeholder="Enter your password" /><button type="button" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300" onclick="togglePw()" aria-label="Toggle password"><i class="fa-solid fa-eye text-sm" id="pwEye"></i></button></div>
+      </div>
+      <div class="flex items-center pt-1"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="remMe" class="w-4 h-4 rounded accent-[#D4620A]" /><span class="text-gray-400 text-sm">Remember me</span></label></div>
+      <button id="loginBtn" class="login-btn w-full py-3.5 rounded-xl text-white font-semibold text-[15px] mt-2" onclick="doLogin()"><i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Sign In</button>
+    </div>
+    <div class="mt-6 pt-5 border-t border-white/10 text-center"><p class="text-gray-500 text-xs">Eagle Phone POS v2.0</p></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="appShell" class="h-screen flex" style="display:none">
+
+<aside class="w-[232px] bg-dark flex flex-col flex-shrink-0 h-screen z-10">
+  <div class="px-5 pt-5 pb-1">
+    <div class="flex items-center gap-3">
+      <img id="sideLogo" src="" alt="Logo" class="logo-circ w-10 h-10" />
+      <div><div class="text-white font-extrabold text-[15px] tracking-tight leading-none">EAGLE</div><div class="text-dark-muted text-[10px] tracking-[.2em] mt-0.5">PHONE POS</div></div>
+    </div>
+  </div>
+  <nav class="flex-1 px-3 mt-6">
+    <div class="text-[10px] uppercase tracking-[.15em] text-dark-muted px-3 mb-2 font-semibold">Menu</div>
+    <div class="nav-item active w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-300 mb-0.5" data-v="dashboard" onclick="go('dashboard')"><i class="fa-solid fa-th-large w-5 text-center text-[12px]"></i>Dashboard</div>
+    <div class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-300 mb-0.5" data-v="sales" onclick="go('sales')"><i class="fa-solid fa-basket-shopping w-5 text-center text-[12px]"></i>New Sale</div>
+    <div class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-300 mb-0.5" data-v="inventory" onclick="go('inventory')"><i class="fa-solid fa-boxes-stacked w-5 text-center text-[12px]"></i>Inventory</div>
+    <div class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-300 mb-0.5" data-v="customers" onclick="go('customers')"><i class="fa-solid fa-user-group w-5 text-center text-[12px]"></i>Customers</div>
+    <div class="nav-item w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-300 mb-0.5" data-v="reports" onclick="go('reports')"><i class="fa-solid fa-chart-simple w-5 text-center text-[12px]"></i>Reports</div>
+  </nav>
+  <div class="px-3 mb-3"><div class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] text-gray-400 hover:text-no hover:bg-red-500/10 transition-all cursor-pointer" onclick="doLogout()"><i class="fa-solid fa-right-from-bracket w-5 text-center text-[12px]"></i>Sign Out</div></div>
+  <div class="px-4 pb-5">
+    <div class="border-t border-dark-lighter pt-4 flex items-center gap-3">
+      <img id="userLogo" src="" alt="Logo" class="logo-circ w-9 h-9" />
+      <div class="flex-1 min-w-0"><div class="text-white text-sm font-medium truncate">Eagle Phone</div><div class="text-dark-muted text-[11px]">Store Account</div></div>
+    </div>
+  </div>
+</aside>
+
+<main class="flex-1 flex flex-col h-screen overflow-hidden">
+  <header class="h-14 bg-white border-b border-surface-border flex items-center px-6 flex-shrink-0">
+    <div class="flex items-center gap-3 flex-1">
+      <img id="headLogo" src="" alt="Logo" class="logo-circ w-8 h-8" />
+      <div class="relative max-w-md flex-1"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted text-xs"></i><input id="gSearch" type="text" placeholder="Search products, customers..." class="w-full pl-9 pr-4 py-2 bg-surface rounded-lg text-sm border border-transparent focus:border-eagle-400 focus:bg-white outline-none transition-all" /></div>
+    </div>
+    <div class="flex items-center gap-4 ml-auto">
+      <div class="text-xs text-surface-muted font-medium" id="curDate"></div>
+      <button class="relative w-9 h-9 rounded-lg bg-surface hover:bg-gray-100 flex items-center justify-center transition-colors" aria-label="Notifications"><i class="fa-solid fa-bell text-dark text-sm"></i><span class="absolute -top-0.5 -right-0.5 w-4 h-4 bg-no rounded-full text-[9px] text-white font-bold flex items-center justify-center" id="nCount">0</span></button>
+    </div>
+  </header>
+
+  <div class="flex-1 overflow-y-auto p-6" id="vc">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="v-dashboard">
+      <div class="flex items-center justify-between mb-6">
+        <div><h1 class="text-2xl font-extrabold text-dark" id="greet">Good Morning, Eagle Phone</h1><p class="text-surface-muted text-sm mt-1">Here's what's happening at your store today.</p></div>
+        <button class="rbtn flex items-center gap-2 px-4 py-2 border border-surface-border rounded-xl text-sm font-medium text-surface-muted" onclick="resetDash()"><i class="fa-solid fa-rotate-right text-xs"></i>Reset to Zero</button>
+      </div>
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <button class="quick-btn bg-eagle-400 hover:bg-eagle-500 text-white rounded-2xl p-5 flex flex-col items-center gap-3 shadow-lg shadow-eagle-400/20" onclick="go('sales')"><div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center"><i class="fa-solid fa-plus text-lg"></i></div><span class="font-semibold text-sm">New Sale</span></button>
+        <button class="quick-btn bg-white hover:bg-gray-50 text-dark rounded-2xl p-5 flex flex-col items-center gap-3 border border-surface-border" onclick="go('inventory')"><div class="w-12 h-12 bg-eagle-50 rounded-xl flex items-center justify-center"><i class="fa-solid fa-boxes-stacked text-eagle-400 text-lg"></i></div><span class="font-semibold text-sm">Check Inventory</span></button>
+        <button class="quick-btn bg-white hover:bg-gray-50 text-dark rounded-2xl p-5 flex flex-col items-center gap-3 border border-surface-border" onclick="go('customers')"><div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center"><i class="fa-solid fa-user-group text-info text-lg"></i></div><span class="font-semibold text-sm">Customers</span></button>
+        <button class="quick-btn bg-white hover:bg-gray-50 text-dark rounded-2xl p-5 flex flex-col items-center gap-3 border border-surface-border" onclick="go('reports')"><div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center"><i class="fa-solid fa-chart-pie text-ok text-lg"></i></div><span class="font-semibold text-sm">Sales Report</span></button>
+      </div>
+      <div class="grid grid-cols-2 gap-4 mb-6">
+        <div class="card-h bg-white rounded-2xl p-5 border border-surface-border"><div class="flex items-center justify-between mb-3"><span class="text-surface-muted text-sm font-medium">Today's Sales</span><div class="w-9 h-9 bg-eagle-50 rounded-lg flex items-center justify-center"><i class="fa-solid fa-dollar-sign text-eagle-400 text-sm"></i></div></div><div class="text-3xl font-extrabold text-dark tabular-nums" id="statSales">$0</div><div class="text-xs text-surface-muted mt-2" id="statSalesN">No sales today</div></div>
+        <div class="card-h bg-white rounded-2xl p-5 border border-surface-border"><div class="flex items-center justify-between mb-3"><span class="text-surface-muted text-sm font-medium">Items Sold Today</span><div class="w-9 h-9 bg-blue-50 rounded-lg flex items-center justify-center"><i class="fa-solid fa-bag-shopping text-info text-sm"></i></div></div><div class="text-3xl font-extrabold text-dark tabular-nums" id="statItems">0</div><div class="text-xs text-surface-muted mt-2" id="statItemsN">No items sold</div></div>
+      </div>
+      <div class="grid grid-cols-3 gap-4">
+        <div class="col-span-2 bg-white rounded-2xl border border-surface-border overflow-hidden"><div class="px-5 py-4 border-b border-surface-border flex items-center justify-between"><h2 class="font-semibold text-dark text-sm">Recent Transactions</h2></div><div id="dTxns"></div></div>
+        <div class="bg-white rounded-2xl border border-surface-border overflow-hidden"><div class="px-5 py-4 border-b border-surface-border flex items-center justify-between"><h2 class="font-semibold text-dark text-sm">Stock Alert</h2><span class="badge b-no" id="alertBdg" style="display:none">Low</span></div><div class="p-4" id="dAlerts"></div></div>
+      </div>
+    </div>
+
+    <!-- SALES -->
+    <div class="view" id="v-sales">
+      <div class="flex items-center justify-between mb-5">
+        <div><h1 class="text-2xl font-extrabold text-dark">New Sale</h1><p class="text-surface-muted text-sm mt-1">Tap a product to add it to the cart.</p></div>
+        <div class="flex items-center gap-3">
+          <button class="rbtn flex items-center gap-2 px-4 py-2 border border-surface-border rounded-xl text-sm font-medium text-surface-muted" onclick="resetSales()"><i class="fa-solid fa-rotate-right text-xs"></i>Reset</button>
+          <select id="sCat" class="bg-white border border-surface-border rounded-lg px-3 py-2 text-sm outline-none focus:border-eagle-400" onchange="renderSales()"><option value="all">All Categories</option><option value="Phones">Phones</option><option value="Accessories">Accessories</option></select>
+          <div class="relative"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted text-xs"></i><input id="sSearch" type="text" placeholder="Search..." class="pl-9 pr-4 py-2 bg-white border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400 w-48" oninput="renderSales()" /></div>
+        </div>
+      </div>
+      <div class="flex gap-5" style="height:calc(100vh - 180px)">
+        <div class="flex-1 overflow-y-auto pr-1"><div class="grid grid-cols-3 gap-3" id="sGrid"></div></div>
+        <div class="w-[310px] bg-white rounded-2xl border border-surface-border flex flex-col flex-shrink-0">
+          <div class="px-5 py-4 border-b border-surface-border flex items-center justify-between"><h2 class="font-semibold text-dark text-sm">Current Sale</h2><button class="text-xs text-surface-muted hover:text-no transition-colors" onclick="resetSales()">Clear</button></div>
+          <div class="flex-1 overflow-y-auto p-4 space-y-2" id="cartList"></div>
+          <div class="border-t border-surface-border p-5">
+            <div class="flex justify-between text-sm mb-1"><span class="text-surface-muted">Subtotal</span><span class="text-dark font-medium" id="cSub">$0.00</span></div>
+            <div class="flex justify-between text-sm mb-1"><span class="text-surface-muted">Tax (8.25%)</span><span class="text-dark font-medium" id="cTax">$0.00</span></div>
+            <div class="flex justify-between text-lg font-bold mt-3 pt-3 border-t border-surface-border"><span class="text-dark">Total</span><span class="text-eagle-400" id="cTot">$0.00</span></div>
+            <button id="chkBtn" class="w-full mt-4 bg-eagle-400 hover:bg-eagle-500 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-35 disabled:cursor-not-allowed" disabled onclick="openChk()"><i class="fa-solid fa-lock mr-2"></i>Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INVENTORY -->
+    <div class="view" id="v-inventory">
+      <div class="flex items-center justify-between mb-5">
+        <div><h1 class="text-2xl font-extrabold text-dark">Inventory</h1><p class="text-surface-muted text-sm mt-1">Manage products and stock levels.</p></div>
+        <div class="flex items-center gap-3">
+          <button class="rbtn flex items-center gap-2 px-4 py-2 border border-surface-border rounded-xl text-sm font-medium text-surface-muted" onclick="resetInv()"><i class="fa-solid fa-rotate-right text-xs"></i>Reset to Zero</button>
+          <button class="bg-eagle-400 hover:bg-eagle-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all" onclick="openAddProd()"><i class="fa-solid fa-plus mr-2"></i>Add Product</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-surface-border overflow-hidden">
+        <div class="px-5 py-4 border-b border-surface-border flex items-center gap-3">
+          <div class="relative flex-1 max-w-sm"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted text-xs"></i><input id="iSearch" type="text" placeholder="Search inventory..." class="pl-9 pr-4 py-2 bg-surface rounded-lg text-sm outline-none focus:border-eagle-400 w-full" oninput="renderInv()" /></div>
+          <select id="iCat" class="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm outline-none focus:border-eagle-400" onchange="renderInv()"><option value="all">All Categories</option><option value="Phones">Phones</option><option value="Accessories">Accessories</option></select>
+          <select id="iStk" class="bg-surface border border-surface-border rounded-lg px-3 py-2 text-sm outline-none focus:border-eagle-400" onchange="renderInv()"><option value="all">All Stock</option><option value="low">Low (&lt;5)</option><option value="ok">In Stock (5+)</option></select>
+        </div>
+        <div class="overflow-x-auto"><table class="w-full"><thead><tr class="text-left text-[11px] text-surface-muted font-semibold uppercase tracking-wider"><th class="px-5 py-3">Product</th><th class="px-5 py-3">Category</th><th class="px-5 py-3 text-right">Price</th><th class="px-5 py-3 text-right">Cost</th><th class="px-5 py-3 text-right">Stock</th><th class="px-5 py-3 text-center">Status</th><th class="px-5 py-3 text-center">Actions</th></tr></thead><tbody class="divide-y divide-surface-border" id="iTbl"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- CUSTOMERS -->
+    <div class="view" id="v-customers">
+      <div class="flex items-center justify-between mb-5">
+        <div><h1 class="text-2xl font-extrabold text-dark">Customers</h1><p class="text-surface-muted text-sm mt-1">Your customer database.</p></div>
+        <div class="flex items-center gap-3">
+          <button class="rbtn flex items-center gap-2 px-4 py-2 border border-surface-border rounded-xl text-sm font-medium text-surface-muted" onclick="resetCust()"><i class="fa-solid fa-rotate-right text-xs"></i>Reset to Zero</button>
+          <button class="bg-eagle-400 hover:bg-eagle-500 text-white font-semibold px-5 py-2.5 rounded-xl text-sm transition-all" onclick="openAddCust()"><i class="fa-solid fa-plus mr-2"></i>Add Customer</button>
+        </div>
+      </div>
+      <div class="bg-white rounded-2xl border border-surface-border overflow-hidden">
+        <div class="px-5 py-4 border-b border-surface-border"><div class="relative max-w-sm"><i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-surface-muted text-xs"></i><input id="cuSearch" type="text" placeholder="Search customers..." class="pl-9 pr-4 py-2 bg-surface rounded-lg text-sm outline-none focus:border-eagle-400 w-full" oninput="renderCust()" /></div></div>
+        <div id="cList"></div>
+      </div>
+    </div>
+
+    <!-- REPORTS -->
+    <div class="view" id="v-reports">
+      <div class="flex items-center justify-between mb-5">
+        <div><h1 class="text-2xl font-extrabold text-dark">Sales Report</h1><p class="text-surface-muted text-sm mt-1">Performance overview.</p></div>
+        <div class="flex items-center gap-2">
+          <button class="rbtn flex items-center gap-2 px-4 py-2 border border-surface-border rounded-xl text-sm font-medium text-surface-muted" onclick="resetRpt()"><i class="fa-solid fa-rotate-right text-xs"></i>Reset</button>
+          <button class="px-4 py-2 bg-eagle-400 text-white rounded-lg text-sm font-semibold">This Week</button>
+          <button class="px-4 py-2 bg-white border border-surface-border text-dark rounded-lg text-sm font-medium hover:bg-gray-50">This Month</button>
+        </div>
+      </div>
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-white rounded-2xl p-5 border border-surface-border"><div class="text-surface-muted text-sm mb-1">Total Revenue</div><div class="text-2xl font-extrabold text-dark" id="rRev">$0</div><div class="text-xs text-surface-muted mt-1" id="rRevN">--</div></div>
+        <div class="bg-white rounded-2xl p-5 border border-surface-border"><div class="text-surface-muted text-sm mb-1">Total Orders</div><div class="text-2xl font-extrabold text-dark" id="rOrd">0</div><div class="text-xs text-surface-muted mt-1" id="rOrdN">--</div></div>
+        <div class="bg-white rounded-2xl p-5 border border-surface-border"><div class="text-surface-muted text-sm mb-1">Avg. Order</div><div class="text-2xl font-extrabold text-dark" id="rAvg">$0</div><div class="text-xs text-surface-muted mt-1" id="rAvgN">--</div></div>
+        <div class="bg-white rounded-2xl p-5 border border-surface-border"><div class="text-surface-muted text-sm mb-1">Profit Margin</div><div class="text-2xl font-extrabold text-dark" id="rMar">0%</div><div class="text-xs text-surface-muted mt-1" id="rMarN">--</div></div>
+      </div>
+      <div class="grid grid-cols-3 gap-4 mb-4">
+        <div class="col-span-2 bg-white rounded-2xl p-5 border border-surface-border"><h3 class="font-semibold text-dark text-sm mb-4">Daily Sales Trend</h3><canvas id="ch1" height="200"></canvas></div>
+        <div class="bg-white rounded-2xl p-5 border border-surface-border"><h3 class="font-semibold text-dark text-sm mb-4">By Category</h3><canvas id="ch2" height="200"></canvas></div>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-surface-border"><h3 class="font-semibold text-dark text-sm mb-4">Top Products</h3><canvas id="ch3" height="90"></canvas></div>
+    </div>
+
+  </div>
+</main>
+</div>
+
+<!-- MODALS -->
+<div class="mo fixed inset-0 bg-black/40 z-50 flex items-center justify-center" id="mChk"><div class="mc bg-white rounded-3xl w-[500px] max-h-[90vh] overflow-y-auto shadow-2xl"><div class="p-6 border-b border-surface-border flex items-center justify-between"><h2 class="text-lg font-bold text-dark">Complete Sale</h2><button class="w-8 h-8 rounded-lg hover:bg-surface flex items-center justify-center" onclick="clM('mChk')"><i class="fa-solid fa-xmark text-surface-muted"></i></button></div><div class="p-6" id="chkBody"></div></div></div>
+<div class="mo fixed inset-0 bg-black/40 z-50 flex items-center justify-center" id="mProd"><div class="mc bg-white rounded-3xl w-[460px] shadow-2xl"><div class="p-6 border-b border-surface-border flex items-center justify-between"><h2 class="text-lg font-bold text-dark" id="pmT">Add Product</h2><button class="w-8 h-8 rounded-lg hover:bg-surface flex items-center justify-center" onclick="clM('mProd')"><i class="fa-solid fa-xmark text-surface-muted"></i></button></div><div class="p-6 space-y-4"><div><label class="text-sm font-medium text-dark mb-1 block">Product Name</label><input id="pN" type="text" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div class="grid grid-cols-2 gap-3"><div><label class="text-sm font-medium text-dark mb-1 block">Brand</label><input id="pB" type="text" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div><label class="text-sm font-medium text-dark mb-1 block">Category</label><select id="pC" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400"><option>Phones</option><option>Accessories</option></select></div></div><div class="grid grid-cols-3 gap-3"><div><label class="text-sm font-medium text-dark mb-1 block">Price ($)</label><input id="pP" type="number" step="0.01" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div><label class="text-sm font-medium text-dark mb-1 block">Cost ($)</label><input id="pCo" type="number" step="0.01" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div><label class="text-sm font-medium text-dark mb-1 block">Stock</label><input id="pS" type="number" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div></div><div><label class="text-sm font-medium text-dark mb-1 block">Image URL</label><input id="pI" type="url" placeholder="https://..." class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><button class="w-full bg-eagle-400 hover:bg-eagle-500 text-white font-semibold py-3 rounded-xl transition-all" onclick="saveProd()">Save Product</button></div></div></div>
+<div class="mo fixed inset-0 bg-black/40 z-50 flex items-center justify-center" id="mCust"><div class="mc bg-white rounded-3xl w-[420px] shadow-2xl"><div class="p-6 border-b border-surface-border flex items-center justify-between"><h2 class="text-lg font-bold text-dark">Add Customer</h2><button class="w-8 h-8 rounded-lg hover:bg-surface flex items-center justify-center" onclick="clM('mCust')"><i class="fa-solid fa-xmark text-surface-muted"></i></button></div><div class="p-6 space-y-4"><div><label class="text-sm font-medium text-dark mb-1 block">Full Name</label><input id="cuN" type="text" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div><label class="text-sm font-medium text-dark mb-1 block">Phone</label><input id="cuPh" type="tel" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><div><label class="text-sm font-medium text-dark mb-1 block">Email</label><input id="cuE" type="email" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" /></div><button class="w-full bg-eagle-400 hover:bg-eagle-500 text-white font-semibold py-3 rounded-xl transition-all" onclick="saveCust()">Save Customer</button></div></div></div>
+<div class="mo fixed inset-0 bg-black/40 z-[60] flex items-center justify-center" id="mCfm"><div class="mc bg-white rounded-2xl w-[380px] shadow-2xl p-6 text-center"><div class="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-trash-can text-no text-xl"></i></div><h3 class="text-lg font-bold text-dark mb-2" id="cfmT">Delete?</h3><p class="text-sm text-surface-muted mb-6" id="cfmM">This cannot be undone.</p><div class="flex gap-3"><button class="flex-1 py-2.5 border border-surface-border rounded-xl text-sm font-medium text-dark hover:bg-gray-50" onclick="clM('mCfm')">Cancel</button><button class="flex-1 py-2.5 bg-no hover:bg-red-700 text-white rounded-xl text-sm font-semibold" onclick="doCfm()">Delete</button></div></div></div>
+
+<div class="fixed top-4 right-4 z-[200] space-y-2" id="toasts"></div>
+
+<script>
+/* ═══ CONFIG ═══ */
+var AUTH_EMAIL = 'tryhard1390@gmail.com';
+var AUTH_PASS = 'Toukhya12';
+var LOGO_URL = 'https://z-cdn-media.chatglm.cn/files/3a2cbed4-d37d-4c1e-8dae-e88db6c93e1b.png?auth_key=1875349299-887da1018c3447cebd0de63f3e435c2e-0-18b11d23053586755e1a228b6e3b5c88';
+var cfmFn = null;
+
+/* ═══ STATE ═══ */
+var P = JSON.parse(localStorage.getItem('eagle_p')) || [];
+var TXN = JSON.parse(localStorage.getItem('eagle_txn')) || [];
+var CUST = JSON.parse(localStorage.getItem('eagle_cust')) || [];
+var cart = [], nxtTxn = parseInt(localStorage.getItem('eagle_nxt_txn')) || 2048, charts = [];
+
+function saveAll() {
+  localStorage.setItem('eagle_p', JSON.stringify(P));
+  localStorage.setItem('eagle_txn', JSON.stringify(TXN));
+  localStorage.setItem('eagle_cust', JSON.stringify(CUST));
+  localStorage.setItem('eagle_nxt_txn', nxtTxn.toString());
+}
+
+function zeroAll() { 
+  P = []; TXN = []; CUST = []; cart = []; nxtTxn = 2048; 
+  saveAll();
+}
+
+/* ═══ HELPERS ═══ */
+function $(id) { return document.getElementById(id); }
+var bBg = {Apple:'#f5f5f7',Samsung:'#e8edf5',Google:'#eaf2fe',Belkin:'#e6f6fd'};
+var bCl = {Apple:'#1D1D1F',Samsung:'#1428A0',Google:'#4285F4',Belkin:'#00A4E4'};
+
+function mkImg(p, cls) {
+  var bg = bBg[p.brand] || '#f0f0f0';
+  var cl = bCl[p.brand] || '#888';
+  var ic = p.cat === 'Phones' ? 'fa-mobile-screen-button' : 'fa-headphones';
+  return '<div class="' + cls + '" style="background:' + bg + '">' +
+    '<img src="' + p.img + '" alt="" loading="lazy" class="w-full h-full object-cover rounded-[inherit]" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" />' +
+    '<div class="ifb w-full h-full rounded-[inherit] absolute inset-0" style="display:none;background:' + bg + '"><i class="fa-solid ' + ic + '" style="color:' + cl + ';opacity:.5"></i></div></div>';
+}
+
+function mkThumb(p, s) {
+  s = s || 44;
+  var bg = bBg[p.brand] || '#f0f0f0';
+  var cl = bCl[p.brand] || '#888';
+  var ic = p.cat === 'Phones' ? 'fa-mobile-screen-button' : 'fa-headphones';
+  return '<div class="rounded-lg overflow-hidden flex-shrink-0" style="width:' + s + 'px;height:' + s + 'px;background:' + bg + '">' +
+    '<img src="' + p.img + '" alt="" loading="lazy" class="w-full h-full object-cover" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'" />' +
+    '<div class="ifb ifb-s w-full h-full" style="display:none;background:' + bg + '"><i class="fa-solid ' + ic + '" style="color:' + cl + ';opacity:.4"></i></div></div>';
+}
+
+function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+/* ═══ TOAST ═══ */
+function toast(msg, type) {
+  type = type || 'success';
+  var icons = {success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info',warning:'fa-triangle-exclamation'};
+  var cols = {success:'#2DA44E',error:'#CF222E',info:'#0969DA',warning:'#BF8700'};
+  var t = document.createElement('div');
+  t.className = 'toast bg-white rounded-xl shadow-lg border border-surface-border px-4 py-3 flex items-center gap-3 min-w-[280px]';
+  t.innerHTML = '<i class="fa-solid ' + icons[type] + '" style="color:' + cols[type] + '"></i><span class="text-sm text-dark font-medium">' + msg + '</span>';
+  $('toasts').appendChild(t);
+  setTimeout(function() { t.classList.add('show'); }, 10);
+  setTimeout(function() { t.classList.remove('show'); setTimeout(function() { t.remove(); }, 400); }, 2800);
+}
+
+/* ═══ MODAL ═══ */
+function opM(id) { $(id).classList.add('on'); }
+function clM(id) { $(id).classList.remove('on'); }
+function askCfm(title, msg, fn) { $('cfmT').textContent = title; $('cfmM').textContent = msg; cfmFn = fn; opM('mCfm'); }
+function doCfm() { clM('mCfm'); if (cfmFn) { cfmFn(); cfmFn = null; } }
+
+/* ═══ LOGIN ═══ */
+function togglePw() {
+  var inp = $('loginPass');
+  var isP = inp.type === 'password';
+  inp.type = isP ? 'text' : 'password';
+  $('pwEye').className = 'fa-solid ' + (isP ? 'fa-eye-slash' : 'fa-eye') + ' text-sm';
+}
+
+function showErr(msg) {
+  $('loginErrTxt').textContent = msg;
+  $('loginErr').classList.remove('hidden');
+  $('loginErr').classList.remove('login-error');
+  void $('loginErr').offsetWidth;
+  $('loginErr').classList.add('login-error');
+}
+
+function doLogin() {
+  var email = $('loginEmail').value.trim();
+  var pass = $('loginPass').value;
+  var btn = $('loginBtn');
+
+  if (!email || !pass) {
+    showErr('Please enter email and password');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i>Signing in...';
+
+  setTimeout(function() {
+    if (email === AUTH_EMAIL && pass === AUTH_PASS) {
+      $('loginErr').classList.add('hidden');
+      if ($('remMe').checked) {
+        localStorage.setItem('eagle_auth', '1');
+      }
+      $('loginScreen').classList.add('login-fade-out');
+      setTimeout(function() {
+        $('loginScreen').style.display = 'none';
+        $('appShell').style.display = 'flex';
+        initApp();
+      }, 500);
+    } else {
+      showErr('Invalid email or password');
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Sign In';
+    }
+  }, 600);
+}
+
+function doLogout() {
+  localStorage.removeItem('eagle_auth');
+  zeroAll();
+  charts.forEach(function(c) { c.destroy(); });
+  charts = [];
+  $('appShell').style.display = 'none';
+  $('loginScreen').style.display = 'flex';
+  $('loginScreen').classList.remove('login-fade-out');
+  $('loginEmail').value = '';
+  $('loginPass').value = '';
+  $('loginBtn').disabled = false;
+  $('loginBtn').innerHTML = '<i class="fa-solid fa-arrow-right-to-bracket mr-2"></i>Sign In';
+  $('loginErr').classList.add('hidden');
+  go('dashboard');
+}
+
+/* Enter key handlers */
+ $('loginEmail').addEventListener('keydown', function(e) { if (e.key === 'Enter') $('loginPass').focus(); });
+ $('loginPass').addEventListener('keydown', function(e) { if (e.key === 'Enter') doLogin(); });
+
+/* Auto-login check */
+if (localStorage.getItem('eagle_auth') === '1') {
+  $('loginScreen').style.display = 'none';
+  $('appShell').style.display = 'flex';
+  initApp();
+}
+
+/* ═══ NAVIGATION ═══ */
+function go(v) {
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.classList.toggle('active', n.getAttribute('data-v') === v);
+  });
+  document.querySelectorAll('.view').forEach(function(el) {
+    el.classList.remove('active');
+    if (el.id === 'v-' + v) { void el.offsetWidth; el.classList.add('active'); }
+  });
+  if (v === 'dashboard') { calcStats(); renderDash(); }
+  if (v === 'sales') renderSales();
+  if (v === 'inventory') renderInv();
+  if (v === 'customers') renderCust();
+  if (v === 'reports') initCharts();
+}
+
+/* ═══ RESET FUNCTIONS ═══ */
+function resetDash() { TXN = []; cart = []; $('nCount').textContent = '0'; calcStats(); renderDash(); saveAll(); toast('Dashboard reset to zero', 'info'); }
+function resetSales() { cart = []; $('sSearch').value = ''; $('sCat').value = 'all'; renderCart(); renderSales(); saveAll(); toast('Sale cleared', 'info'); }
+function resetInv() { P = []; $('iSearch').value = ''; $('iCat').value = 'all'; $('iStk').value = 'all'; renderInv(); saveAll(); toast('Inventory reset to zero', 'info'); }
+function resetCust() { CUST = []; $('cuSearch').value = ''; renderCust(); saveAll(); toast('Customers reset to zero', 'info'); }
+function resetRpt() { charts.forEach(function(c) { c.destroy(); }); charts = []; initCharts(); saveAll(); toast('Reports reset', 'info'); }
+
+/* ═══ DASHBOARD ═══ */
+function calcStats() {
+  var ts = 0, ti = 0;
+  for (var i = 0; i < TXN.length; i++) {
+    ts += TXN[i].total;
+    for (var j = 0; j < TXN[i].items.length; j++) ti += TXN[i].items[j].qty;
+  }
+  $('statSales').textContent = fmt(ts);
+  $('statItems').textContent = ti;
+  $('statSalesN').textContent = ts > 0 ? TXN.length + ' transaction(s)' : 'No sales today';
+  $('statItemsN').textContent = ti > 0 ? 'From ' + TXN.length + ' order(s)' : 'No items sold';
+}
+
+function renderDash() {
+  /* Transactions */
+  if (!TXN.length) {
+    $('dTxns').innerHTML = '<div class="empt"><i class="fa-solid fa-receipt"></i><p>No transactions yet</p></div>';
+  } else {
+    var h = '';
+    for (var i = 0; i < Math.min(8, TXN.length); i++) {
+      var t = TXN[i];
+      var p0 = null;
+      for (var j = 0; j < P.length; j++) { if (P[j].id === t.items[0].pid) { p0 = P[j]; break; } }
+      var thumb = p0 ? mkThumb(p0, 40) : '<div class="w-10 h-10 rounded-lg bg-surface flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-receipt text-surface-muted text-xs"></i></div>';
+      var inames = '';
+      for (var k = 0; k < t.items.length; k++) inames += (k > 0 ? ', ' : '') + t.items[k].name;
+      h += '<div class="trow px-5 py-3 flex items-center gap-4">' + thumb +
+        '<div class="flex-1 min-w-0"><div class="text-sm font-semibold text-dark truncate">' + inames + '</div><div class="text-xs text-surface-muted">' + t.cust + ' · ' + t.method + '</div></div>' +
+        '<div class="text-right flex-shrink-0"><div class="text-sm font-bold text-dark">' + fmt(t.total) + '</div><div class="text-xs text-surface-muted">' + t.time + '</div></div>' +
+        '<button class="dbtn w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0" title="Delete" data-txn="' + t.id + '"><i class="fa-solid fa-trash-can text-surface-muted text-[10px]"></i></button></div>';
+    }
+    $('dTxns').innerHTML = h;
+    /* Attach delete handlers after rendering */
+    var btns = $('dTxns').querySelectorAll('[data-txn]');
+    btns.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var tid = this.getAttribute('data-txn');
+        askCfm('Delete Transaction?', 'Remove ' + tid + ' permanently.', function() {
+          TXN = TXN.filter(function(t) { return t.id !== tid; });
+          $('nCount').textContent = Math.max(0, parseInt($('nCount').textContent) - 1);
+          calcStats(); renderDash(); saveAll(); toast('Transaction deleted', 'info');
+        });
+      });
+    });
+  }
+
+  /* Stock alerts */
+  var low = P.filter(function(p) { return p.stock <= 5 && p.cat === 'Phones'; });
+  if (!low.length) {
+    $('dAlerts').innerHTML = '<div class="empt"><i class="fa-solid fa-check-circle"></i><p>All stock healthy</p></div>';
+    $('alertBdg').style.display = 'none';
+  } else {
+    $('alertBdg').style.display = '';
+    var ah = '<div class="space-y-3">';
+    for (var i = 0; i < low.length; i++) {
+      var p = low[i];
+      var crit = p.stock <= 3;
+      ah += '<div class="flex items-center gap-3 p-2.5 rounded-xl ' + (crit ? 'bg-red-50' : 'bg-yellow-50') + '">' +
+        '<div class="w-2 h-2 rounded-full flex-shrink-0 ' + (crit ? 'bg-no pulse-d' : 'bg-warn') + '"></div>' +
+        mkThumb(p, 36) +
+        '<div class="flex-1 min-w-0"><div class="text-xs font-semibold text-dark truncate">' + p.name + '</div><div class="text-[11px] ' + (crit ? 'text-no' : 'text-warn') + ' font-medium">' + p.stock + ' left</div></div>' +
+        '<button class="text-[11px] font-semibold ' + (crit ? 'text-no' : 'text-warn') + ' hover:underline" onclick="go(\'inventory\')">Restock</button></div>';
+    }
+    $('dAlerts').innerHTML = ah + '</div>';
+  }
+}
+
+/* ═══ SALES ═══ */
+function renderSales() {
+  var q = ($('sSearch').value || '').toLowerCase();
+  var c = $('sCat').value || 'all';
+  var list = P.filter(function(p) {
+    return (p.name.toLowerCase().indexOf(q) >= 0 || p.brand.toLowerCase().indexOf(q) >= 0) && (c === 'all' || p.cat === c);
+  });
+  if (!list.length) { $('sGrid').innerHTML = '<div class="col-span-3 empt"><i class="fa-solid fa-box-open"></i><p>No products available</p></div>'; return; }
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var ci = null; for (var j = 0; j < cart.length; j++) { if (cart[j].id === p.id) { ci = cart[j]; break; } }
+    h += '<div class="prod-card bg-white rounded-2xl border border-surface-border overflow-hidden" data-pid="' + p.id + '">' +
+      '<div class="relative w-full" style="aspect-ratio:5/4">' + mkImg(p, 'absolute inset-0 overflow-hidden') +
+      (ci ? '<div class="absolute top-2 right-2 w-6 h-6 bg-eagle-400 rounded-full flex items-center justify-center text-white text-xs font-bold shadow">' + ci.qty + '</div>' : '') +
+      (p.stock < 5 ? '<div class="absolute top-2 left-2 badge ' + (p.stock <= 3 ? 'b-no' : 'b-wr') + '">' + (p.stock <= 3 ? 'Critical' : 'Low') + '</div>' : '') +
+      '</div><div class="p-3.5"><div class="text-[11px] text-surface-muted font-medium mb-0.5">' + p.brand + '</div>' +
+      '<div class="text-sm font-semibold text-dark truncate mb-1.5 leading-snug">' + p.name + '</div>' +
+      '<div class="flex items-center justify-between"><span class="text-base font-extrabold text-eagle-400">' + fmt(p.price) + '</span>' +
+      '<span class="text-[11px] ' + (p.stock < 5 ? 'text-no font-semibold' : 'text-surface-muted') + '">' + p.stock + ' left</span></div></div></div>';
+  }
+  $('sGrid').innerHTML = h;
+  $('sGrid').querySelectorAll('[data-pid]').forEach(function(el) {
+    el.addEventListener('click', function() { addCart(parseInt(this.getAttribute('data-pid'))); });
+  });
+}
+
+function addCart(id) {
+  var p = null; for (var i = 0; i < P.length; i++) { if (P[i].id === id) { p = P[i]; break; } }
+  if (!p) return;
+  var e = null; for (var j = 0; j < cart.length; j++) { if (cart[j].id === id) { e = cart[j]; break; } }
+  if (e) { if (e.qty >= p.stock) { toast('Not enough stock', 'warning'); return; } e.qty++; }
+  else cart.push({id:p.id, name:p.name, price:p.price, qty:1, cat:p.cat, imei: p.imeis && p.imeis[0] ? p.imeis[0] : null});
+  renderCart(); renderSales(); saveAll(); toast('Added ' + p.name);
+}
+function rmCart(id) { cart = cart.filter(function(c) { return c.id !== id; }); renderCart(); renderSales(); saveAll(); }
+function updQty(id, d) {
+  var it = null, p = null;
+  for (var i = 0; i < cart.length; i++) { if (cart[i].id === id) it = cart[i]; }
+  for (var j = 0; j < P.length; j++) { if (P[j].id === id) p = P[j]; }
+  if (!it || !p) return;
+  it.qty += d;
+  if (it.qty <= 0) { rmCart(id); return; }
+  if (it.qty > p.stock) { it.qty = p.stock; toast('Not enough stock', 'warning'); }
+  renderCart(); renderSales(); saveAll();
+}
+
+function renderCart() {
+  if (!cart.length) {
+    $('cartList').innerHTML = '<div class="empt"><i class="fa-solid fa-basket-shopping"></i><p>Cart is empty</p></div>';
+    $('chkBtn').disabled = true;
+  } else {
+    var h = '';
+    for (var i = 0; i < cart.length; i++) {
+      var it = cart[i];
+      var p = null; for (var j = 0; j < P.length; j++) { if (P[j].id === it.id) { p = P[j]; break; } }
+      h += '<div class="cart-item bg-surface rounded-xl p-3 flex gap-3">' +
+        (p ? mkThumb(p, 44) : '') +
+        '<div class="flex-1 min-w-0"><div class="text-xs font-semibold text-dark truncate">' + it.name + '</div>' +
+        (it.imei ? '<div class="text-[10px] text-surface-muted font-mono">IMEI: ' + it.imei + '</div>' : '') +
+        '<div class="text-xs font-bold text-eagle-400 mt-0.5">' + fmt(it.price * it.qty) + '</div></div>' +
+        '<div class="flex flex-col items-center gap-1">' +
+        '<button class="w-5 h-5 rounded bg-white border border-surface-border flex items-center justify-center hover:bg-gray-50" data-uq="' + it.id + '" data-ud="1"><i class="fa-solid fa-plus" style="font-size:8px;color:#1D1D1F"></i></button>' +
+        '<span class="text-xs font-bold text-dark">' + it.qty + '</span>' +
+        '<button class="w-5 h-5 rounded bg-white border border-surface-border flex items-center justify-center hover:bg-gray-50" data-uq="' + it.id + '" data-ud="-1"><i class="fa-solid fa-minus" style="font-size:8px;color:#1D1D1F"></i></button></div>' +
+        '<button class="self-start dbtn w-6 h-6 rounded flex items-center justify-center mt-0.5" data-rq="' + it.id + '"><i class="fa-solid fa-xmark text-[10px] text-surface-muted"></i></button></div>';
+    }
+    $('cartList').innerHTML = h;
+    $('cartList').querySelectorAll('[data-uq]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) { e.stopPropagation(); updQty(parseInt(this.getAttribute('data-uq')), parseInt(this.getAttribute('data-ud'))); });
+    });
+    $('cartList').querySelectorAll('[data-rq]').forEach(function(btn) {
+      btn.addEventListener('click', function(e) { e.stopPropagation(); rmCart(parseInt(this.getAttribute('data-rq'))); });
+    });
+    $('chkBtn').disabled = false;
+  }
+  var sub = 0; for (var i = 0; i < cart.length; i++) sub += cart[i].price * cart[i].qty;
+  var tax = sub * 0.0825;
+  $('cSub').textContent = fmt(sub); $('cTax').textContent = fmt(tax); $('cTot').textContent = fmt(sub + tax);
+}
+
+/* ═══ CHECKOUT ═══ */
+var payM = 'Credit Card';
+function openChk() {
+  if (!cart.length) return;
+  var sub = 0; for (var i = 0; i < cart.length; i++) sub += cart[i].price * cart[i].qty;
+  var tax = sub * 0.0825, tot = sub + tax;
+  var custOpts = '<option value="">Walk-in Customer</option>';
+  for (var i = 0; i < CUST.length; i++) custOpts += '<option>' + CUST[i].name + '</option>';
+  $('chkBody').innerHTML =
+    '<div class="text-center mb-6"><div class="text-sm text-surface-muted mb-1">Total Amount</div><div class="text-4xl font-extrabold text-dark">' + fmt(tot) + '</div><div class="text-xs text-surface-muted mt-1">' + cart.length + ' item(s) · Tax included</div></div>' +
+    '<div class="mb-5"><label class="text-sm font-semibold text-dark block mb-2">Payment Method</label><div class="grid grid-cols-3 gap-2">' +
+    '<button class="pm-btn sel border-2 border-eagle-400 rounded-xl p-3 text-center" data-pm="Credit Card"><i class="fa-solid fa-credit-card text-eagle-400 text-lg mb-1"></i><div class="text-[11px] font-semibold text-dark">Card</div></button>' +
+    '<button class="pm-btn border-2 border-surface-border rounded-xl p-3 text-center" data-pm="Cash"><i class="fa-solid fa-money-bill-wave text-ok text-lg mb-1"></i><div class="text-[11px] font-semibold text-dark">Cash</div></button>' +
+    '<button class="pm-btn border-2 border-surface-border rounded-xl p-3 text-center" data-pm="Mobile Pay"><i class="fa-solid fa-mobile-screen text-info text-lg mb-1"></i><div class="text-[11px] font-semibold text-dark">Mobile</div></button></div></div>' +
+    '<div id="cashSec" class="hidden mb-4"><label class="text-sm font-medium text-dark mb-1 block">Cash Received</label><input id="cashIn" type="number" step="0.01" class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400" placeholder="0.00" /><div class="text-sm mt-1 font-medium text-dark">Change: <span id="chgAmt" class="text-ok">$0.00</span></div></div>' +
+    '<div class="mb-4"><label class="text-sm font-medium text-dark mb-1 block">Customer (optional)</label><select class="w-full px-3 py-2.5 border border-surface-border rounded-lg text-sm outline-none focus:border-eagle-400">' + custOpts + '</select></div>' +
+    '<button class="w-full bg-eagle-400 hover:bg-eagle-500 text-white font-bold py-3.5 rounded-xl transition-all" id="doSaleBtn">Complete Sale</button>';
+  payM = 'Credit Card';
+  opM('mChk');
+  /* Attach handlers */
+  $('chkBody').querySelectorAll('[data-pm]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      $('chkBody').querySelectorAll('.pm-btn').forEach(function(b) { b.classList.remove('sel','border-eagle-400'); b.classList.add('border-surface-border'); });
+      this.classList.add('sel','border-eagle-400'); this.classList.remove('border-surface-border');
+      payM = this.getAttribute('data-pm');
+      $('cashSec').classList.toggle('hidden', payM !== 'Cash');
+    });
+  });
+  var cashIn = $('cashIn');
+  if (cashIn) cashIn.addEventListener('input', function() {
+    var rc = parseFloat(this.value) || 0, chg = Math.max(0, rc - tot);
+    $('chgAmt').textContent = fmt(chg); $('chgAmt').style.color = chg > 0 ? '#2DA44E' : '#CF222E';
+  });
+  $('doSaleBtn').addEventListener('click', function() { doSale(); });
+}
+
+function doSale() {
+  if (payM === 'Cash') {
+    var sub = 0; for (var i = 0; i < cart.length; i++) sub += cart[i].price * cart[i].qty;
+    if ((parseFloat($('cashIn').value) || 0) < sub * 1.0825) { toast('Insufficient cash', 'error'); return; }
+  }
+  for (var i = 0; i < cart.length; i++) {
+    var p = null; for (var j = 0; j < P.length; j++) { if (P[j].id === cart[i].id) { p = P[j]; break; } }
+    if (p) p.stock = Math.max(0, p.stock - cart[i].qty);
+  }
+  var sub = 0; for (var i = 0; i < cart.length; i++) sub += cart[i].price * cart[i].qty;
+  var newItems = []; for (var i = 0; i < cart.length; i++) newItems.push({name:cart[i].name, pid:cart[i].id, qty:cart[i].qty, price:cart[i].price});
+  TXN.unshift({id:'TXN-'+nxtTxn++, cust:'Walk-in Customer', items:newItems, total:sub*1.0825, time:new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:true}), method:payM});
+  clM('mChk'); cart = []; renderCart(); renderSales();
+  $('nCount').textContent = parseInt($('nCount').textContent) + 1;
+  saveAll();
+  toast('Sale completed!');
+}
+
+/* ═══ INVENTORY ═══ */
+function renderInv() {
+  var q = ($('iSearch').value || '').toLowerCase();
+  var c = $('iCat').value || 'all';
+  var s = $('iStk').value || 'all';
+  var list = P.filter(function(p) {
+    var ms = p.name.toLowerCase().indexOf(q) >= 0 || p.brand.toLowerCase().indexOf(q) >= 0;
+    var mc = c === 'all' || p.cat === c;
+    var ms2 = s === 'all' || (s === 'low' && p.stock < 5) || (s === 'ok' && p.stock >= 5);
+    return ms && mc && ms2;
+  });
+  if (!list.length) { $('iTbl').innerHTML = '<tr><td colspan="7" class="empt"><i class="fa-solid fa-box-open"></i><p>No products in inventory</p></td></tr>'; return; }
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    var p = list[i];
+    var sc = p.stock <= 3 ? 'b-no' : p.stock <= 5 ? 'b-wr' : 'b-ok';
+    var st = p.stock <= 3 ? 'Critical' : p.stock <= 5 ? 'Low' : 'In Stock';
+    h += '<tr class="trow"><td class="px-5 py-3"><div class="flex items-center gap-3">' + mkThumb(p, 40) +
+      '<div><div class="text-sm font-semibold text-dark">' + p.name + '</div><div class="text-xs text-surface-muted">' + p.brand + '</div></div></div></td>' +
+      '<td class="px-5 py-3 text-sm text-surface-muted">' + p.cat + '</td>' +
+      '<td class="px-5 py-3 text-sm font-semibold text-dark text-right">' + fmt(p.price) + '</td>' +
+      '<td class="px-5 py-3 text-sm text-surface-muted text-right">' + fmt(p.cost) + '</td>' +
+      '<td class="px-5 py-3 text-sm font-semibold text-dark text-right">' + p.stock + '</td>' +
+      '<td class="px-5 py-3 text-center"><span class="badge ' + sc + '">' + st + '</span></td>' +
+      '<td class="px-5 py-3 text-center"><div class="flex items-center justify-center gap-1">' +
+      '<button class="dbtn w-7 h-7 rounded-md flex items-center justify-center" title="Edit" data-epid="' + p.id + '"><i class="fa-solid fa-pen text-surface-muted text-xs"></i></button>' +
+      '<button class="dbtn w-7 h-7 rounded-md flex items-center justify-center" title="Delete" data-dpid="' + p.id + '"><i class="fa-solid fa-trash-can text-surface-muted text-xs"></i></button>' +
+      '</div></td></tr>';
+  }
+  $('iTbl').innerHTML = h;
+  $('iTbl').querySelectorAll('[data-epid]').forEach(function(btn) {
+    btn.addEventListener('click', function() { editProd(parseInt(this.getAttribute('data-epid'))); });
+  });
+  $('iTbl').querySelectorAll('[data-dpid]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var pid = parseInt(this.getAttribute('data-dpid'));
+      askCfm('Delete Product?', 'Remove this product permanently.', function() {
+        P = P.filter(function(p) { return p.id !== pid; });
+        cart = cart.filter(function(c) { return c.id !== pid; });
+        renderInv(); renderCart(); saveAll(); toast('Product deleted', 'info');
+      });
+    });
+  });
+}
+
+function openAddProd() { $('pmT').textContent = 'Add Product'; $('pN').value = ''; $('pB').value = ''; $('pC').value = 'Phones'; $('pP').value = ''; $('pCo').value = ''; $('pS').value = ''; $('pI').value = ''; opM('mProd'); }
+function editProd(id) {
+  var p = null; for (var i = 0; i < P.length; i++) { if (P[i].id === id) { p = P[i]; break; } }
+  if (!p) return;
+  $('pmT').textContent = 'Edit Product'; $('pN').value = p.name; $('pB').value = p.brand; $('pC').value = p.cat; $('pP').value = p.price; $('pCo').value = p.cost; $('pS').value = p.stock; $('pI').value = p.img || '';
+  opM('mProd');
+}
+function saveProd() {
+  var n = $('pN').value.trim(), b = $('pB').value.trim(), c = $('pC').value;
+  var pr = parseFloat($('pP').value), co = parseFloat($('pCo').value), st = parseInt($('pS').value);
+  var im = $('pI').value.trim();
+  if (!n || !b || isNaN(pr) || isNaN(co) || isNaN(st)) { toast('Fill all required fields', 'error'); return; }
+  var ex = null; for (var i = 0; i < P.length; i++) { if (P[i].name === n) { ex = P[i]; break; } }
+  if (ex) { ex.brand = b; ex.cat = c; ex.price = pr; ex.cost = co; ex.stock = st; if (im) ex.img = im; }
+  else P.push({id:Date.now(), name:n, brand:b, cat:c, price:pr, cost:co, stock:st, img:im || 'https://picsum.photos/seed/' + n.replace(/\s/g,'') + '/300/360'});
+  clM('mProd'); renderInv(); saveAll(); toast('Product saved');
+}
+
+/* ═══ CUSTOMERS ═══ */
+function renderCust() {
+  var q = ($('cuSearch').value || '').toLowerCase();
+  var list = CUST.filter(function(c) { return c.name.toLowerCase().indexOf(q) >= 0 || c.phone.indexOf(q) >= 0 || c.email.toLowerCase().indexOf(q) >= 0; });
+  if (!list.length) { $('cList').innerHTML = '<div class="empt"><i class="fa-solid fa-user-slash"></i><p>No customers yet</p></div>'; return; }
+  var colors = ['#D4620A','#0969DA','#2DA44E','#8B5CF6','#CF222E','#BF8700','#059669','#7C3AED'];
+  var h = '';
+  for (var i = 0; i < list.length; i++) {
+    var c = list[i];
+    var init = c.name.split(' ').map(function(w) { return w[0]; }).join('');
+    h += '<div class="trow px-5 py-4 flex items-center gap-4">' +
+      '<div class="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0" style="background:' + colors[i % colors.length] + '">' + init + '</div>' +
+      '<div class="flex-1 min-w-0"><div class="text-sm font-semibold text-dark">' + c.name + '</div><div class="text-xs text-surface-muted">' + c.phone + ' · ' + c.email + '</div></div>' +
+      '<div class="text-right flex-shrink-0"><div class="text-sm font-bold text-dark">' + c.purchases + ' orders</div><div class="text-xs text-surface-muted">$' + c.spent.toLocaleString() + '</div></div>' +
+      '<button class="dbtn w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" title="Delete" data-dcid="' + c.id + '"><i class="fa-solid fa-trash-can text-surface-muted text-xs"></i></button></div>';
+  }
+  $('cList').innerHTML = h;
+  $('cList').querySelectorAll('[data-dcid]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var cid = parseInt(this.getAttribute('data-dcid'));
+      askCfm('Delete Customer?', 'Remove this customer permanently.', function() {
+        CUST = CUST.filter(function(c) { return c.id !== cid; });
+        renderCust(); saveAll(); toast('Customer deleted', 'info');
+      });
+    });
+  });
+}
+
+function openAddCust() { $('cuN').value = ''; $('cuPh').value = ''; $('cuE').value = ''; opM('mCust'); }
+function saveCust() {
+  var n = $('cuN').value.trim(), p = $('cuPh').value.trim(), e = $('cuE').value.trim();
+  if (!n || !p) { toast('Name and phone required', 'error'); return; }
+  CUST.push({id:Date.now(), name:n, phone:p, email:e, purchases:0, spent:0});
+  clM('mCust'); renderCust(); saveAll(); toast('Customer added');
+}
+
+/* ═══ REPORTS ═══ */
+function initCharts() {
+  charts.forEach(function(c) { c.destroy(); }); charts = [];
+  Chart.defaults.font.family = 'Plus Jakarta Sans'; Chart.defaults.color = '#86868B';
+  var rev = 0, ord = TXN.length, totalCost = 0;
+  for (var i = 0; i < TXN.length; i++) {
+    rev += TXN[i].total;
+    for (var j = 0; j < TXN[i].items.length; j++) {
+      var p = null; for (var k = 0; k < P.length; k++) { if (P[k].id === TXN[i].items[j].pid) { p = P[k]; break; } }
+      if (p) totalCost += p.cost * TXN[i].items[j].qty;
+    }
+  }
+  var avg = ord > 0 ? rev / ord : 0;
+  var margin = rev > 0 ? ((rev - totalCost) / rev * 100) : 0;
+  $('rRev').textContent = fmt(rev); $('rOrd').textContent = ord; $('rAvg').textContent = fmt(avg); $('rMar').textContent = margin.toFixed(1) + '%';
+  $('rRevN').textContent = rev > 0 ? 'From transactions' : 'No data';
+  $('rOrdN').textContent = ord > 0 ? 'This period' : 'No data';
+  $('rAvgN').textContent = avg > 0 ? 'Per order' : 'No data';
+  $('rMarN').textContent = margin > 0 ? 'Net margin' : 'No data';
+
+  charts.push(new Chart($('ch1'), {type:'line', data:{labels:['Mon','Tue','Wed','Thu','Fri','Sat','Sun'], datasets:[{label:'Revenue',data:[0,0,0,0,0,0,0],borderColor:'#D4620A',backgroundColor:'rgba(212,98,10,0.07)',fill:true,tension:.4,borderWidth:2.5,pointBackgroundColor:'#D4620A',pointBorderColor:'#fff',pointBorderWidth:2,pointRadius:4}]}, options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grid:{color:'#F0F0F0'},ticks:{callback:function(v){return '$'+v}}},x:{grid:{display:false}}}}}));
+  charts.push(new Chart($('ch2'), {type:'doughnut', data:{labels:['Phones','Accessories','Cases','Cables'], datasets:[{data:[0,0,0,0],backgroundColor:['#D4620A','#0969DA','#2DA44E','#8B5CF6'],borderWidth:0,hoverOffset:8}]}, options:{responsive:true,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:14,usePointStyle:true,pointStyleWidth:10,font:{size:11}}}}}}));
+  charts.push(new Chart($('ch3'), {type:'bar', data:{labels:['No data yet'],datasets:[{label:'Units',data:[0],backgroundColor:['#E5E5EA'],borderRadius:6,borderSkipped:false,barThickness:32}]}, options:{indexAxis:'y',responsive:true,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,grid:{color:'#F0F0F0'}},y:{grid:{display:false},ticks:{font:{size:12,weight:'600'},color:'#86868B'}}}}}));
+}
+
+/* ═══ GLOBAL SEARCH ═══ */
+ $('gSearch').addEventListener('input', function() {
+  var q = this.value.toLowerCase().trim();
+  if (!q) return;
+  var found = null;
+  for (var i = 0; i < P.length; i++) { if (P[i].name.toLowerCase().indexOf(q) >= 0 || P[i].brand.toLowerCase().indexOf(q) >= 0) { found = P[i]; break; } }
+  if (found) { go('sales'); $('sSearch').value = q; renderSales(); return; }
+  for (var j = 0; j < CUST.length; j++) { if (CUST[j].name.toLowerCase().indexOf(q) >= 0) { go('customers'); $('cuSearch').value = q; renderCust(); return; } }
+});
+
+/* ═══ INIT APP ═══ */
+function initApp() {
+  /* Set logos */
+  var imgs = document.querySelectorAll('img[id$="Logo"]');
+  imgs.forEach(function(img) { img.src = LOGO_URL; });
+  $('loginLogo').src = LOGO_URL;
+  $('sideLogo').src = LOGO_URL;
+  $('userLogo').src = LOGO_URL;
+  $('headLogo').src = LOGO_URL;
+
+  var now = new Date();
+  $('curDate').textContent = now.toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  var h = now.getHours();
+  $('greet').textContent = (h < 12 ? 'Good Morning' : h < 17 ? 'Good Afternoon' : 'Good Evening') + ', Eagle Phone';
+  calcStats(); renderDash();
+}
+</script>
+</body>
+</html>

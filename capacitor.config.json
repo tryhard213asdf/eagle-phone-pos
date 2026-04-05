@@ -1,0 +1,8 @@
+{
+  "appId": "com.eagle.ios",
+  "appName": "Eagle Phone POS",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
