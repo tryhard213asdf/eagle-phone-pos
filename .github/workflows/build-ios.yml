@@ -34,23 +34,32 @@ jobs:
       
     - name: Check iOS setup
       run: |
+        echo "=== ios/App contents ==="
         ls -la ios/App/
+        echo "=== Checking for Podfile ==="
+        find ios -name "Podfile" -o -name "*.xcworkspace" 2>/dev/null || echo "No Podfile found"
         if [ ! -f "ios/App/Podfile" ]; then
-          echo "Podfile not found, removing ios folder and re-adding..."
-          rm -rf ios
-          npx cap add ios
-          npx cap sync
+          echo "Podfile not found, this project uses SPM (Swift Package Manager)"
+          echo "Skipping CocoaPods installation"
         fi
       
-    - name: Install CocoaPods
+    - name: Install CocoaPods (if needed)
       run: |
-        cd ios/App
-        pod install --verbose
+        if [ -f "ios/App/Podfile" ]; then
+          cd ios/App
+          pod install --verbose
+        else
+          echo "No Podfile found, skipping CocoaPods (using SPM)"
+        fi
       
     - name: Build iOS Project
       run: |
         cd ios/App
-        xcodebuild -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO -allowProvisioningUpdates 2>&1 | tee build.log
+        if [ -f "App.xcworkspace" ]; then
+          xcodebuild -workspace App.xcworkspace -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log
+        else
+          xcodebuild -project App.xcodeproj -scheme App -destination 'generic/platform=iOS' -configuration Release CODE_SIGNING_ALLOWED=NO 2>&1 | tee build.log
+        fi
         cat build.log
       
     - name: Export IPA (unsigned)
